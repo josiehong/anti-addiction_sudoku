@@ -1,8 +1,8 @@
-# Solve All the Sudoku, Leave No Joy for Solving by Yourself
+# Solve all the sudoku, leave no joy for solving by yourself
 
-A Sudoku-solving calculator with an ironic anti-addiction premise: instantly solve any Sudoku so you never have to think about one again.
+Why struggle for hours when you can solve any Sudoku in milliseconds? Just paste it in, hit Solve, and get on with your life. Your addiction ends here — and it feels great.
 
-If you have a friend addicted to Sudoku, share this with them. :)
+If you have a friend addicted to Sudoku, share this with them! ;)
 
 
 ## Setup
@@ -115,7 +115,6 @@ Built-in puzzles are in `anti_sudoku/puzzles/`. Format: space-separated digits, 
 ...
 ```
 
----
 
 ## Reference
 
