@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "anti-sudoku"
-version = "0.1.0"
+version = "0.1.1"
 description = "Solve All the Sudoku, Leave No Joy for Solving by Yourself"
 readme = "README.md"
 requires-python = ">=3.9"

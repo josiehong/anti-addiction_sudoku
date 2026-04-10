@@ -14,15 +14,15 @@ If you have a friend addicted to Sudoku, share this with them! ;)
 pip install anti-sudoku
 
 # Or install from source
-git clone https://github.com/yuhhong/Anti-addiction_Sudoku.git
-cd Anti-addiction_Sudoku
+git clone https://github.com/josiehong/anti-addiction_sudoku.git
+cd anti-addiction_sudoku
 pip install .
 ```
 
 
 ## Web UI
 
-<img src="./anti-sudoku.png" width=1000>
+<img src="https://raw.githubusercontent.com/yuhhong/Anti-addiction_Sudoku/main/anti-sudoku.png" width=1000>
 
 The web UI lets you generate puzzles or type one in manually, then solve it — or get step-by-step hints.
 
