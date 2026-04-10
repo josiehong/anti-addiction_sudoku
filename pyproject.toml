@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "anti-sudoku"
+version = "0.1.0"
+description = "Solve All the Sudoku, Leave No Joy for Solving by Yourself"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [{name = "Yuhui Hong"}]
+keywords = ["sudoku", "solver", "puzzle"]
+dependencies = [
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.23.0",
+]
+
+[project.scripts]
+anti-sudoku = "anti_sudoku.cli:main"
+
+[project.optional-dependencies]
+dev = ["build", "twine"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["anti_sudoku"]
+
+[tool.hatch.build]
+include = [
+    "anti_sudoku/**",
+]

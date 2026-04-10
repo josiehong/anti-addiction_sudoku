@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anti-Addiction Sudoku</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Claude-inspired design tokens ───────────────────────────── */
+    :root {
+      --bg:            #FAF9F6;   /* warm off-white */
+      --surface:       #FFFFFF;
+      --surface-2:     #F0ECE4;   /* warm parchment */
+      --border:        #DDD8CF;
+      --border-strong: #B8B0A4;
+      --text:          #1A1714;   /* warm near-black */
+      --text-muted:    #78716C;
+      --accent:        #D97757;   /* Claude terracotta */
+      --accent-dark:   #C06642;
+      --accent-light:  #FDF0EA;
+      --hint-bg:       #FEF3C7;
+      --hint-text:     #92400E;
+      --error-bg:      #FEE2E2;
+      --error-text:    #991B1B;
+      --ok-bg:         #ECFDF5;
+      --ok-text:       #065F46;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 60px;
+    }
+
+    /* ── Header ───────────────────────────────────────────────────── */
+    .logo {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      font-size: 18px;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      margin-bottom: 6px;
+      text-align: center;
+    }
+
+    .tagline {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      text-align: center;
+      font-style: italic;
+      letter-spacing: 0.01em;
+    }
+
+    /* ── Card wrapper ─────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    }
+
+    /* ── Segmented tabs ───────────────────────────────────────────── */
+    .tabs {
+      display: flex;
+      background: var(--surface-2);
+      border-radius: 10px;
+      padding: 3px;
+      margin-bottom: 20px;
+      gap: 2px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 7px 12px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      font-family: inherit;
+      transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+    }
+
+    .tab.active {
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* ── Controls ─────────────────────────────────────────────────── */
+    .controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    select {
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 0.875rem;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2378716C' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+    }
+
+    select:focus { border-color: var(--accent); }
+
+    button.btn {
+      padding: 8px 18px;
+      border: none;
+      border-radius: 999px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+    }
+
+    button.btn:active { opacity: 0.8; }
+
+    .btn-generate { background: var(--accent);   color: #fff; }
+    .btn-generate:hover { background: var(--accent-dark); }
+
+    .btn-solve {
+      background: var(--text);
+      color: #fff;
+    }
+    .btn-solve:hover { opacity: 0.85; }
+
+    .btn-hint {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-hint:hover { background: var(--border); }
+
+    .btn-clear {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .btn-clear:hover { color: var(--text); border-color: var(--border-strong); }
+
+    /* ── Status ───────────────────────────────────────────────────── */
+    .status {
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      margin-bottom: 16px;
+      text-align: center;
+      visibility: hidden;
+      line-height: 1.4;
+    }
+
+    .status.show    { visibility: visible; }
+    .status.info    { background: var(--accent-light); color: var(--accent-dark); }
+    .status.success { background: var(--ok-bg);        color: var(--ok-text); }
+    .status.error   { background: var(--error-bg);     color: var(--error-text); }
+
+    /* ── Techniques panel ────────────────────────────────────────── */
+    .techniques {
+      display: none;
+    }
+
+    .technique-item {
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .technique-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .technique-item:first-child {
+      padding-top: 0;
+    }
+
+    .technique-name {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .technique-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+      letter-spacing: 0.02em;
+    }
+
+    .badge-easy   { background: #D1FAE5; color: #065F46; }
+    .badge-hard   { background: #FEF3C7; color: #92400E; }
+    .badge-master { background: #FEE2E2; color: #991B1B; }
+
+    .technique-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    .technique-example {
+      margin-top: 6px;
+      font-size: 0.75rem;
+      color: var(--accent-dark);
+      background: var(--accent-light);
+      border-radius: 6px;
+      padding: 6px 10px;
+      line-height: 1.5;
+    }
+
+    /* ── 9×9 board ────────────────────────────────────────────────── */
+    .board-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .board-outer {
+      border: 2px solid var(--border-strong);
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(9, 48px);
+      grid-template-rows:    repeat(9, 48px);
+      gap: 0;
+    }
+
+    .cell {
+      width: 48px;
+      height: 48px;
+      border: none;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 600;
+      font-family: 'Inter', inherit;
+      letter-spacing: -0.01em;
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      outline: none;
+      caret-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: background 0.1s;
+      border-right:  1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* 3×3 block separators */
+    .cell[data-r="0"] { border-top:    2px solid var(--border-strong); }
+    .cell[data-r="3"] { border-top:    2px solid var(--border-strong); }
+    .cell[data-r="6"] { border-top:    2px solid var(--border-strong); }
+    .cell[data-r="8"] { border-bottom: 2px solid var(--border-strong); }
+    .cell[data-c="0"] { border-left:   2px solid var(--border-strong); }
+    .cell[data-c="3"] { border-left:   2px solid var(--border-strong); }
+    .cell[data-c="6"] { border-left:   2px solid var(--border-strong); }
+    .cell[data-c="8"] { border-right:  2px solid var(--border-strong); }
+
+    .cell.given    { background: var(--surface-2);  color: var(--text); }
+    .cell.user     { color: var(--accent); }
+    .cell.hint     { background: var(--hint-bg);    color: var(--hint-text); }
+    .cell.error    { background: var(--error-bg);   color: var(--error-text); }
+    .cell.selected { background: var(--accent-light); }
+    .cell.peer     { background: #FBF7F5; }
+
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="logo">♟</div>
+<h1>Anti-Addiction Sudoku</h1>
+<p class="tagline">Solve All the Sudoku, Leave No Joy for Solving by Yourself</p>
+
+<div class="card">
+
+  <!-- Mode tabs -->
+  <div class="tabs">
+    <button class="tab active" id="tab-generate"   onclick="setMode('generate')">Generate</button>
+    <button class="tab"        id="tab-manual"     onclick="setMode('manual')">Manual Input</button>
+    <button class="tab"        id="tab-techniques" onclick="setMode('techniques')">Techniques</button>
+  </div>
+
+  <!-- Generate controls -->
+  <div class="controls" id="gen-controls">
+    <select id="difficulty">
+      <option value="easy">Easy</option>
+      <option value="hard" selected>Hard</option>
+      <option value="master">Master</option>
+      <option value="grandmaster">Grandmaster</option>
+    </select>
+    <button class="btn btn-generate" onclick="generatePuzzle()">Generate</button>
+  </div>
+
+  <!-- Shared action buttons -->
+  <div class="controls" id="action-controls">
+    <button class="btn btn-solve" onclick="solvePuzzle()">Solve</button>
+    <button class="btn btn-hint"  onclick="getHint()">Hint</button>
+    <button class="btn btn-clear" onclick="clearBoard()">Clear</button>
+  </div>
+
+  <!-- Status message -->
+  <div class="status" id="status"></div>
+
+  <!-- Board -->
+  <div class="board-wrap" id="board-wrap">
+    <div class="board-outer">
+      <div class="board" id="board"></div>
+    </div>
+  </div>
+
+
+  <!-- Techniques panel -->
+  <div class="techniques" id="techniques-panel">
+
+    <div class="technique-item">
+      <div class="technique-name">
+        Naked Single
+        <span class="technique-badge badge-easy">Easy</span>
+      </div>
+      <div class="technique-desc">
+        A cell has only one candidate left — fill it in. This happens when all other digits are already present in the cell's row, column, or 3×3 box.
+      </div>
+      <div class="technique-example">
+        Example: a cell in row 3 — digits 1, 2, 4, 5, 6, 7, 8, 9 all appear nearby, so it must be <strong>3</strong>.
+      </div>
+    </div>
+
+    <div class="technique-item">
+      <div class="technique-name">
+        Hidden Single
+        <span class="technique-badge badge-easy">Easy</span>
+      </div>
+      <div class="technique-desc">
+        A digit can go in only one cell within a row, column, or box — even if that cell has other candidates. It's "hidden" among them.
+      </div>
+      <div class="technique-example">
+        Example: digit <strong>7</strong> can only fit in one cell in a box because every other cell in that box conflicts with a 7 elsewhere in its row or column.
+      </div>
+    </div>
+
+    <div class="technique-item">
+      <div class="technique-name">
+        Naked Pairs / Triples
+        <span class="technique-badge badge-hard">Hard</span>
+      </div>
+      <div class="technique-desc">
+        If 2 cells in a group share exactly the same 2 candidates, no other cell in that group can hold those digits — eliminate them everywhere else. Extends to 3 cells sharing 3 candidates (Naked Triple).
+      </div>
+      <div class="technique-example">
+        Example: two cells in a row both have only {4, 9} as candidates → 4 and 9 can be removed from every other cell in that row.
+      </div>
+    </div>
+
+    <div class="technique-item">
+      <div class="technique-name">
+        Hidden Pairs / Triples
+        <span class="technique-badge badge-hard">Hard</span>
+      </div>
+      <div class="technique-desc">
+        If 2 digits appear as candidates in only the same 2 cells of a group, those 2 cells must contain those digits — so all other candidates in those cells can be removed.
+      </div>
+      <div class="technique-example">
+        Example: digits 3 and 8 appear only in cells A and B within a column → cells A and B cannot contain any digit other than 3 or 8.
+      </div>
+    </div>
+
+    <div class="technique-item">
+      <div class="technique-name">
+        Pointing Pairs
+        <span class="technique-badge badge-hard">Hard</span>
+      </div>
+      <div class="technique-desc">
+        If a digit's candidates within a 3×3 box all fall on the same row or column, that digit cannot appear in that row or column outside the box.
+      </div>
+      <div class="technique-example">
+        Example: digit <strong>5</strong> can only go in row 2 within a box → all other 5s in row 2 outside that box are eliminated.
+      </div>
+    </div>
+
+    <div class="technique-item">
+      <div class="technique-name">
+        X-Wing
+        <span class="technique-badge badge-master">Master</span>
+      </div>
+      <div class="technique-desc">
+        When a digit appears as a candidate in exactly 2 cells in each of 2 rows, and those cells share the same 2 columns, the digit must be in one of those columns — so it can be eliminated from every other cell in those columns.
+      </div>
+      <div class="technique-example">
+        Example: digit <strong>6</strong> is a candidate only in columns 2 and 7 of rows 1 and 5 → 6 can be removed from all other cells in columns 2 and 7.
+      </div>
+    </div>
+
+    <div class="technique-item">
+      <div class="technique-name">
+        Swordfish
+        <span class="technique-badge badge-master">Master</span>
+      </div>
+      <div class="technique-desc">
+        The X-Wing pattern extended to 3 rows and 3 columns. If a digit's candidates in 3 rows cover at most 3 columns, that digit can be eliminated from those 3 columns everywhere else.
+      </div>
+      <div class="technique-example">
+        Example: digit <strong>2</strong> appears only in columns 1, 4, and 8 across rows 2, 6, and 9 → 2 is removed from all other cells in columns 1, 4, and 8.
+      </div>
+    </div>
+
+    <div class="technique-item">
+      <div class="technique-name">
+        Backtracking
+        <span class="technique-badge badge-master">Master</span>
+      </div>
+      <div class="technique-desc">
+        When no logical technique applies, try the most-constrained cell (fewest candidates), guess a value, and continue solving. If a contradiction is reached, undo and try the next candidate. Guaranteed to find a solution but not human-like.
+      </div>
+    </div>
+
+  </div><!-- .techniques -->
+
+<script>
+  let board    = Array(81).fill(0);
+  let givens   = Array(81).fill(0);
+  let mode     = 'generate';
+  let selected = null;
+
+  function buildGrid() {
+    var container = document.getElementById('board');
+    container.innerHTML = '';
+    for (var i = 0; i < 81; i++) {
+      (function(idx) {
+        var r  = Math.floor(idx / 9);
+        var c  = idx % 9;
+        var el = document.createElement('input');
+        el.type = 'text';
+        el.inputMode = 'numeric';
+        el.maxLength = 1;
+        el.className = 'cell';
+        el.setAttribute('data-idx', idx);
+        el.setAttribute('data-r', r);
+        el.setAttribute('data-c', c);
+        el.addEventListener('mousedown', function(e) { e.preventDefault(); selectCell(idx); });
+        el.addEventListener('focus', function() { selectCell(idx); });
+        el.addEventListener('input', function() {
+          var v = el.value.replace(/[^1-9]/g, '');
+          el.value = '';          /* clear so renderBoard controls the display */
+          setCell(idx, v ? parseInt(v) : 0);
+        });
+        container.appendChild(el);
+      })(i);
+    }
+  }
+
+  function selectCell(idx) {
+    selected = idx;
+    renderHighlights();
+  }
+
+  function renderHighlights() {
+    var r = selected !== null ? Math.floor(selected / 9) : -1;
+    var c = selected !== null ? selected % 9 : -1;
+    var b = selected !== null ? Math.floor(r / 3) * 3 + Math.floor(c / 3) : -1;
+    document.querySelectorAll('.cell').forEach(function(el) {
+      var i  = parseInt(el.getAttribute('data-idx'));
+      var ri = Math.floor(i / 9);
+      var ci = i % 9;
+      var bi = Math.floor(ri / 3) * 3 + Math.floor(ci / 3);
+      el.classList.remove('selected', 'peer');
+      if (i === selected) {
+        el.classList.add('selected');
+      } else if (ri === r || ci === c || bi === b) {
+        el.classList.add('peer');
+      }
+    });
+  }
+
+  function renderBoard() {
+    document.querySelectorAll('.cell').forEach(function(el) {
+      var i = parseInt(el.getAttribute('data-idx'));
+      el.classList.remove('given', 'user', 'hint', 'error');
+      if (givens[i] !== 0) {
+        el.value = givens[i];
+        el.classList.add('given');
+      } else if (board[i] !== 0) {
+        el.value = board[i];
+        el.classList.add('user');
+      } else {
+        el.value = '';
+      }
+    });
+    renderHighlights();
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (selected === null) return;
+    if ('123456789'.indexOf(e.key) !== -1) {
+      setCell(selected, parseInt(e.key));
+    } else if (e.key === '0' || e.key === 'Backspace' || e.key === 'Delete') {
+      setCell(selected, 0);
+    } else if (e.key === 'ArrowRight') { move(0,  1); e.preventDefault(); }
+    else if   (e.key === 'ArrowLeft')  { move(0, -1); e.preventDefault(); }
+    else if   (e.key === 'ArrowDown')  { move(1,  0); e.preventDefault(); }
+    else if   (e.key === 'ArrowUp')    { move(-1, 0); e.preventDefault(); }
+  });
+
+  function move(dr, dc) {
+    var r = Math.floor(selected / 9) + dr;
+    var c = (selected % 9) + dc;
+    if (r >= 0 && r < 9 && c >= 0 && c < 9) selectCell(r * 9 + c);
+  }
+
+  function setCell(idx, val) {
+    if (givens[idx] !== 0) return;
+    board[idx] = val;
+    var el = document.querySelector('.cell[data-idx="' + idx + '"]');
+    el.classList.remove('hint', 'error');
+    el.value = val !== 0 ? val : '';
+    if (val !== 0) { el.classList.add('user'); } else { el.classList.remove('user'); }
+  }
+
+  function setMode(m) {
+    mode = m;
+    document.getElementById('tab-generate').classList.toggle('active', m === 'generate');
+    document.getElementById('tab-manual').classList.toggle('active', m === 'manual');
+    document.getElementById('tab-techniques').classList.toggle('active', m === 'techniques');
+
+    var isSolver = m === 'generate' || m === 'manual';
+    document.getElementById('gen-controls').style.display = m === 'generate' ? 'flex' : 'none';
+    document.getElementById('action-controls').style.display = isSolver ? 'flex' : 'none';
+    document.getElementById('status').style.display = isSolver ? '' : 'none';
+    document.getElementById('board-wrap').style.display = isSolver ? 'flex' : 'none';
+    document.getElementById('techniques-panel').style.display = m === 'techniques' ? 'block' : 'none';
+
+    if (isSolver) clearBoard();
+  }
+
+  async function generatePuzzle() {
+    var difficulty = document.getElementById('difficulty').value;
+    showStatus('Generating ' + difficulty + ' puzzle...', 'info');
+    try {
+      var res  = await fetch('/puzzle?difficulty=' + difficulty);
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Server error');
+      board  = data.board.slice();
+      givens = data.board.slice();
+      renderBoard();
+      var n = givens.filter(function(v) { return v !== 0; }).length;
+      showStatus(cap(difficulty) + ' puzzle ready — ' + n + ' clues. Press Solve or Hint.', 'info');
+    } catch (err) {
+      showStatus('Failed to generate: ' + err.message, 'error');
+    }
+  }
+
+  async function solvePuzzle() {
+    var payload = mergedBoard();
+    showStatus('Solving...', 'info');
+    try {
+      var res  = await fetch('/solve', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({board: payload})
+      });
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Server error');
+      if (data.solved) {
+        board = data.board.slice();
+        renderBoard();
+        showStatus("Solved! You didn't even have to think.", 'success');
+      } else {
+        showStatus('No solution found — check for mistakes in your input.', 'error');
+      }
+    } catch (err) {
+      showStatus('Solve failed: ' + err.message, 'error');
+    }
+  }
+
+  async function getHint() {
+    var payload = mergedBoard();
+    try {
+      var res  = await fetch('/hint', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({board: payload})
+      });
+      if (res.status === 404) {
+        showStatus('No hint available — puzzle may already be complete.', 'info');
+        return;
+      }
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Server error');
+
+      board[data.cell] = data.value;
+      var el = document.querySelector('.cell[data-idx="' + data.cell + '"]');
+      el.value = data.value;
+      el.classList.remove('user', 'error');
+      el.classList.add('hint');
+
+      var r = Math.floor(data.cell / 9) + 1;
+      var c = (data.cell % 9) + 1;
+      showStatus('Hint: Row ' + r + ', Col ' + c + ' = ' + data.value + ' \u2014 ' + data.technique, 'info');
+    } catch (err) {
+      showStatus('Hint failed: ' + err.message, 'error');
+    }
+  }
+
+  function clearBoard() {
+    board    = Array(81).fill(0);
+    givens   = Array(81).fill(0);
+    selected = null;
+    renderBoard();
+    showStatus('', '');
+  }
+
+  function mergedBoard() {
+    return board.map(function(v, i) { return givens[i] !== 0 ? givens[i] : v; });
+  }
+
+  function showStatus(msg, type) {
+    var el = document.getElementById('status');
+    el.textContent = msg;
+    el.className = 'status' + (msg ? ' show ' + type : '');
+  }
+
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  buildGrid();
+</script>
+</body>
+</html>
